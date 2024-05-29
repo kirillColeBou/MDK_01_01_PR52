@@ -72,7 +72,11 @@ namespace ReportGeneration_Тепляков.Pages
 
         private void ReportGeneration(object sender, RoutedEventArgs e)
         {
-
+            if (CBGroups.SelectedIndex != CBGroups.Items.Count - 1)
+            {
+                int IdGroup = AllGroups.Find(x => x.Name == CBGroups.SelectedItem).Id;
+                Report.Group(IdGroup, this);
+            }
         }
     }
 }
