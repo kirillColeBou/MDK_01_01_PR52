@@ -22,6 +22,8 @@ namespace ReportGeneration_Тепляков.Items
     /// </summary>
     public partial class Student : UserControl
     {
+        public static Pages.Main _Main;
+        int id;
         public Student(StudentContext student, Pages.Main Main)
         {
             InitializeComponent();
@@ -53,6 +55,10 @@ namespace ReportGeneration_Тепляков.Items
             doneWorks.Value = (100f / (float)NecessarilyCount) * ((float)DoneCount);
             missedCount.Value = (100f / ((float)WorksCount * 90f)) * ((float)MissedCount);
             TBGroup.Text = Main.AllGroups.Find(x => x.Id == student.IdGroup).Name;
+            id = student.Id;
+            _Main = Main;
         }
+
+        private void ExportInfoStudent(object sender, RoutedEventArgs e) => Report.InfoStudent(id, _Main);
     }
 }

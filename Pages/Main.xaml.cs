@@ -47,7 +47,7 @@ namespace ReportGeneration_Тепляков.Pages
         public void CreateStudents(List<StudentContext> AllStudents)
         {
             parent.Children.Clear();
-            foreach (var student in AllStudents) parent.Children.Add(new Items.Student(Student, this));
+            foreach (var student in AllStudents) parent.Children.Add(new Items.Student(student, this));
         }
 
         private void SelectGroup(object sender, SelectionChangedEventArgs e)

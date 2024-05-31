@@ -9,7 +9,7 @@ namespace ReportGeneration_Тепляков.Classes.Common
 {
     public class Connection
     {
-        public static string config = "server=localhost;uid=root;database=journal;";
+        public static string config = "server=localhost;port=3307;uid=root;database=journal;";
 
         public static MySqlConnection OpenConnection()
         {

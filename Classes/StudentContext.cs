@@ -17,7 +17,7 @@ namespace ReportGeneration_Тепляков.Classes
         {
             List<StudentContext> allStudents = new List<StudentContext>();
             MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Student = Connection.Query("Select * From `student` Order By `LastName`;", connection);
+            MySqlDataReader Student = Connection.Query("Select * From Student Order By `LastName`;", connection);
             while (Student.Read())
             {
                 allStudents.Add(new StudentContext(
@@ -26,9 +26,10 @@ namespace ReportGeneration_Тепляков.Classes
                     Student.GetString(2),
                     Student.GetInt32(3),
                     Student.GetBoolean(4),
-                    Student.GetDateTime(5)));
+                    Student.IsDBNull(5) ? DateTime.Now : Student.GetDateTime(5)));
             }
             Connection.CloseConnection(connection);
             return allStudents;
         }
+    }
 }

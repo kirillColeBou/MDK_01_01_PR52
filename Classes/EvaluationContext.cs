@@ -17,7 +17,7 @@ namespace ReportGeneration_Тепляков.Classes
         {
             List<EvaluationContext> allEvaluations = new List<EvaluationContext>();
             MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Evaluation = Connection.Query("Select * From `evaluation` Order By `evaluation`;", connection);
+            MySqlDataReader Evaluation = Connection.Query("Select * From `evaluation`;", connection);
             while (Evaluation.Read())
             {
                 allEvaluations.Add(new EvaluationContext(
@@ -30,4 +30,5 @@ namespace ReportGeneration_Тепляков.Classes
             Connection.CloseConnection(connection);
             return allEvaluations;
         }
+    }
 }

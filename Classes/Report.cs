@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Drawing;
 
 namespace ReportGeneration_Тепляков.Classes
 {
@@ -23,6 +24,8 @@ namespace ReportGeneration_Тепляков.Classes
             {
                 GroupContext Group = main.AllGroups.Find(x => x.Id == IdGroup);
                 var ExcelApp = new Microsoft.Office.Interop.Excel.Application();
+                int idBestStudent = 0;
+                int temp = 1000;
                 bool IsComplete = false;
                 try
                 {
@@ -76,7 +79,13 @@ namespace ReportGeneration_Тепляков.Classes
                                         AbsenteeismCount++;
                                     else LateCount++;
                                 }
+
                             }
+                        }
+                        if ((PracticeCount + TheoryCount + AbsenteeismCount + LateCount) < temp)
+                        {
+                            temp = PracticeCount + TheoryCount + AbsenteeismCount + LateCount;
+                            idBestStudent = Height;
                         }
                         (Worksheet.Cells[Height, 1] as Microsoft.Office.Interop.Excel.Range).Value = $"{student.Lastname} {student.Firstname}";
                         Styles(Worksheet.Cells[Height, 1] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignLeft, true);
@@ -90,6 +99,7 @@ namespace ReportGeneration_Тепляков.Classes
                         Styles(Worksheet.Cells[Height, 5] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignCenter, true);
                         Height++;
                     }
+                    Worksheet.Range[Worksheet.Cells[idBestStudent, 1], Worksheet.Cells[idBestStudent, 5]].Interior.Color = ColorTranslator.ToOle(System.Drawing.Color.Green);
                     Workbook.SaveAs(SFD.FileName);
                     IsComplete = true;
                     Workbook.Close();
@@ -119,6 +129,99 @@ namespace ReportGeneration_Тепляков.Classes
                 border.LineStyle = Microsoft.Office.Interop.Excel.XlLineStyle.xlDouble;
                 border.Weight = XlBorderWeight.xlThin;
                 Cell.WrapText = true;
+            }
+        }
+
+        public static void InfoStudent(int id, Main main)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            SaveFileDialog SFD = new SaveFileDialog()
+            {
+                InitialDirectory = path,
+                Filter = "Excel file (*.xlsx)|*.xlsx",
+            };
+            SFD.ShowDialog();
+            if (SFD.FileName != "")
+            {
+                var ExcelApp = new Microsoft.Office.Interop.Excel.Application();
+                bool IsComplete = false;
+                try
+                {
+                    List<StudentContext> Students = main.AllStudents.FindAll(x => x.Id == id);
+                    ExcelApp.Visible = false;
+                    Microsoft.Office.Interop.Excel.Workbook Workbook = ExcelApp.Workbooks.Add(Type.Missing);
+                    Microsoft.Office.Interop.Excel.Worksheet Worksheet = Workbook.ActiveSheet as Microsoft.Office.Interop.Excel.Worksheet;
+                    Worksheet.Name = Students.Find(x => x.Id == id).Lastname;
+                    (Worksheet.Cells[1, 1] as Microsoft.Office.Interop.Excel.Range).Value = $"Отчёт о студенте";
+                    Worksheet.Range[Worksheet.Cells[1, 1], Worksheet.Cells[1, 5]].Merge();
+                    Styles((Range)Worksheet.Cells[1, 1], 18);
+                    (Worksheet.Cells[3, 1] as Microsoft.Office.Interop.Excel.Range).Value = $"ФИО";
+                    Styles((Range)Worksheet.Cells[3, 1], 12, XlHAlign.xlHAlignCenter, true);
+                    (Worksheet.Cells[3, 1] as Microsoft.Office.Interop.Excel.Range).ColumnWidth = 35.0f; 
+                    Styles((Range)Worksheet.Cells[3, 1], 12, XlHAlign.xlHAlignCenter, true);
+                    (Worksheet.Cells[3, 2] as Microsoft.Office.Interop.Excel.Range).Value = $"Кол-во не сданных практических";
+                    Styles((Range)Worksheet.Cells[3, 2], 12, XlHAlign.xlHAlignCenter, true);
+                    (Worksheet.Cells[3, 3] as Microsoft.Office.Interop.Excel.Range).Value = $"Кол-во не сданных теоретических";
+                    Styles((Range)Worksheet.Cells[3, 3], 12, XlHAlign.xlHAlignCenter, true);
+                    (Worksheet.Cells[3, 4] as Microsoft.Office.Interop.Excel.Range).Value = $"Отсутствовал на паре";
+                    Styles((Range)Worksheet.Cells[3, 4], 12, XlHAlign.xlHAlignCenter, true);
+                    (Worksheet.Cells[3, 5] as Microsoft.Office.Interop.Excel.Range).Value = $"Опоздал";
+                    Styles((Range)Worksheet.Cells[3, 5], 12, XlHAlign.xlHAlignCenter, true);
+                    int Height = 4;
+                    List<StudentContext> _Students = main.AllStudents.FindAll(x => x.Id == id);
+                    foreach (StudentContext student in _Students)
+                    {
+                        List<DisciplineContext> StudentDisciplines = main.AllDisciplines.FindAll(x => x.IdGroup == student.IdGroup);
+                        int PracticeCount = 0;
+                        int TheoryCount = 0;
+                        int AbsenteeismCount = 0;
+                        int LateCount = 0;
+                        foreach (DisciplineContext StudentDiscipline in StudentDisciplines)
+                        {
+                            List<WorkContext> StudentWorks = main.AllWorks.FindAll(x => x.IdDiscipline == StudentDiscipline.Id);
+                            foreach (WorkContext StudentWork in StudentWorks)
+                            {
+                                EvaluationContext Evaluation = main.AllEvaluations.Find(x => x.IdWork == StudentWork.Id && x.IdStudent == student.Id);
+                                if ((Evaluation != null && (Evaluation.Value.Trim() == "" || Evaluation.Value.Trim() == "2"))
+                                    || Evaluation == null)
+                                {
+                                    if (StudentWork.IdType == 1)
+                                        PracticeCount++;
+                                    else if (StudentWork.IdType == 2)
+                                        TheoryCount++;
+                                }
+                                if (Evaluation != null && Evaluation.Lateness.Trim() != "")
+                                {
+                                    if (Convert.ToInt32(Evaluation.Lateness) == 90)
+                                        AbsenteeismCount++;
+                                    else LateCount++;
+                                }
+                            }
+                        }
+                        (Worksheet.Cells[Height, 1] as Microsoft.Office.Interop.Excel.Range).Value = $"{student.Lastname} {student.Firstname}";
+                        Styles(Worksheet.Cells[Height, 1] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignLeft, true);
+                        (Worksheet.Cells[Height, 2] as Microsoft.Office.Interop.Excel.Range).Value = PracticeCount.ToString();
+                        Styles(Worksheet.Cells[Height, 2] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignCenter, true);
+                        (Worksheet.Cells[Height, 3] as Microsoft.Office.Interop.Excel.Range).Value = TheoryCount.ToString();
+                        Styles(Worksheet.Cells[Height, 3] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignCenter, true);
+                        (Worksheet.Cells[Height, 4] as Microsoft.Office.Interop.Excel.Range).Value = AbsenteeismCount.ToString();
+                        Styles(Worksheet.Cells[Height, 4] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignCenter, true);
+                        (Worksheet.Cells[Height, 5] as Microsoft.Office.Interop.Excel.Range).Value = LateCount.ToString();
+                        Styles(Worksheet.Cells[Height, 5] as Microsoft.Office.Interop.Excel.Range, 12, XlHAlign.xlHAlignCenter, true);
+                    }
+                    Workbook.SaveAs(SFD.FileName);
+                    IsComplete = true;
+                    Workbook.Close();
+                    if (IsComplete)
+                    {
+                        MessageBox.Show($"Успешный импорт файла '{SFD.FileName}'.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                ExcelApp.Quit();
             }
         }
     }
